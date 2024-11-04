@@ -4,6 +4,7 @@ import (
 	"context"
 	"emmanuel-guerreiro/stockgo/lib"
 	"emmanuel-guerreiro/stockgo/lib/db"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -36,4 +37,26 @@ func findByID(id string) (*StockView, error) {
 	}
 
 	return &articleConfig, nil
+}
+
+func create(stockViewDto *CreateStockViewDto) (string, error) {
+	result, err := dbCollection().InsertOne(context.TODO(), createDtoToStockView(stockViewDto))
+	if err != nil {
+		return "", err
+	}
+
+	if oid, ok := result.InsertedID.(bson.ObjectID); ok {
+		return oid.Hex(), nil
+	}
+
+	return "", ErrID
+}
+
+func createDtoToStockView(articleConfig *CreateStockViewDto) *StockView {
+	return &StockView{
+		ArticleId: articleConfig.ArticleId,
+		Stock:     articleConfig.Stock,
+		Created:   time.Now(),
+		Updated:   time.Now(),
+	}
 }

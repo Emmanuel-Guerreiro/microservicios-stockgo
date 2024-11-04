@@ -1,10 +1,10 @@
-package rabbit
+package ordersplaced
 
 import (
 	"emmanuel-guerreiro/stockgo/lib"
-	ordersplaced "emmanuel-guerreiro/stockgo/modules/orders_placed"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -78,30 +78,41 @@ func ConsumeOrderPlaced() error {
 		for d := range mgs {
 			body := d.Body
 
-			articleMessage := &ordersplaced.ConsumeOrderPlacedDto{}
+			articleMessage := &ConsumeOrderPlacedDto{}
 			err = json.Unmarshal(body, articleMessage)
-			if err == nil {
-				// l := logger.WithField(log.LOG_FIELD_CORRELATION_ID, getConsumeOrderPlacedCorrelationId(articleMessage))
-				// l.Info("Incoming order_placed :", string(body))
-
-				ordersplaced.ProcessOrderPlaced(articleMessage)
-
-				if err := d.Ack(false); err != nil {
-					// l.Info("Failed ACK order_placed :", string(body), err)
-					fmt.Println("Failed ACK order_placed :  ", string(body))
-				} else {
-					fmt.Println("Consumed order_placed :", string(body))
-
-					// l.Info("Consumed order_placed :", string(body))
-				}
-			} else {
+			if err != nil {
 				fmt.Println("Error during parse")
-				// logger.Error(err)
+				continue
 			}
+			// l := logger.WithField(log.LOG_FIELD_CORRELATION_ID, getConsumeOrderPlacedCorrelationId(articleMessage))
+			// l.Info("Incoming order_placed :", string(body))
+
+			ProcessOrderPlaced(articleMessage) //TODO: Handle any possible error
+
+			if err := d.Ack(false); err != nil {
+				// l.Info("Failed ACK order_placed :", string(body), err)
+				fmt.Println("Failed ACK order_placed :  ", string(body))
+			} else {
+				fmt.Println("Consumed order_placed :", string(body))
+
+				// l.Info("Consumed order_placed :", string(body))
+			}
+
 		}
 	}()
 
 	fmt.Println("Closed connection: ", <-conn.NotifyClose(make(chan *amqp.Error)))
 
 	return nil
+}
+
+func ListenerOrderPlaced() {
+	for {
+		err := ConsumeOrderPlaced()
+		if err != nil {
+			fmt.Errorf("%s", err.Error())
+		}
+		// logger.Info("RabbitMQ consumePlaceOrder conectando en 5 segundos.")
+		time.Sleep(5 * time.Second)
+	}
 }

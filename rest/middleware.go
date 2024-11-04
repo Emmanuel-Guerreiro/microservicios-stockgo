@@ -36,7 +36,7 @@ func validateToken(c *gin.Context) (*security.User, error) {
 
 	// ctx := GinCtx(c)
 	ctx := c
-	user, err := security.Validate(tokenString, ctx...)
+	user, err := security.Validate(tokenString, ctx)
 	if err != nil {
 		return nil, lib.UnauthorizedError
 	}

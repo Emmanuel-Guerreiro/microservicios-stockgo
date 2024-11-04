@@ -41,3 +41,15 @@ func getServer() *gin.Engine {
 
 	return server
 }
+
+func GinCtx(c *gin.Context) []interface{} {
+	var ctx []interface{}
+	// mock_ctx solo es para mocks en testing
+	if mocks, ok := c.Get("mock_ctx"); ok {
+		ctx = mocks.([]interface{})
+	}
+
+	ctx = append(ctx, ginLogger(c))
+
+	return ctx
+}

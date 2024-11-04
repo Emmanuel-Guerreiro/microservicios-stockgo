@@ -10,10 +10,8 @@ type StockView struct {
 }
 
 type CreateStockViewDto struct {
-	ArticleId string    `bson:"articleId" json:"articleId" validate:"required,min=1,max=100"`
-	Stock     int       `json:"stock"`
-	Created   time.Time `bson:"createdAt" json:"createdAt"`
-	Updated   time.Time `bson:"updatedAt" json:"updatedAt"`
+	ArticleId string `bson:"articleId" json:"articleId" validate:"required,min=1,max=100"`
+	Stock     int    `json:"stock"`
 }
 
 type ReplaceStockViewDto struct {

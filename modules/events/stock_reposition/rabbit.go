@@ -1,18 +1,21 @@
-package rabbit
+package stockreposition
 
 import (
+	"emmanuel-guerreiro/stockgo/lib"
+	"encoding/json"
 	"fmt"
-	"log"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func ConsumeIncrementEvent() error {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+func ConsumeRepositionEvent() error {
+	conn, err := amqp.Dial(lib.GetEnv().RabbitURL)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
+
 	ch, err := conn.Channel()
 	if err != nil {
 		return err
@@ -48,7 +51,7 @@ func ConsumeIncrementEvent() error {
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		true,   // auto-ack
+		true,   // auto-ack //TODo: Should be handled manually?
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -57,10 +60,31 @@ func ConsumeIncrementEvent() error {
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
+			newMessage := &consumeStockRepositionDto{}
+			body := d.Body
+
+			err = json.Unmarshal(body, newMessage)
+			if err != nil {
+				fmt.Errorf("%s", err.Error())
+				//TODO: Should requeue message?
+				continue
+			}
+
+			handleReposition(newMessage)
 		}
 	}()
 
 	fmt.Println("Closed connection: ", <-conn.NotifyClose(make(chan *amqp.Error)))
 	return nil
+}
+
+func ListenerReposition() {
+	for {
+		err := ConsumeRepositionEvent()
+		if err != nil {
+			fmt.Errorf("%s", err.Error())
+		}
+		// logger.Info("RabbitMQ consumePlaceOrder conectando en 5 segundos.")
+		time.Sleep(5 * time.Second)
+	}
 }
