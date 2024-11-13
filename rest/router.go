@@ -8,6 +8,6 @@ func initRouter() {
 	}
 
 	//v1 routes
-	v1 := server.Group("/v1")
+	v1 := server.Group("/v1", ProtectedMiddleware)
 	artconfig.InitController(v1)
 }

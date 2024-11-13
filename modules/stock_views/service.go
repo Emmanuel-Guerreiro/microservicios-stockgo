@@ -31,6 +31,7 @@ func CreateOne(dto *CreateStockViewDto) (string, error) {
 func updateOrCreateOne(dto *CreateStockViewDto) (*StockView, error) {
 	return updateOrCreate(dto)
 }
+
 func GenerateStockView(id string) (*StockView, error) {
 	//Will query orders_placed, generate the view and save it before returning it
 	stock, err := events.FindArticleStockFromEvents(id)

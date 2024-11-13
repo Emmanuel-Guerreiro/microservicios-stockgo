@@ -53,7 +53,7 @@ func ConsumeOrderPlaced() error {
 
 	err = chn.QueueBind(
 		queue.Name,     // queue name
-		"",             // routing key
+		"",             // routing key -> No lleva RK porque es fanout el exchange al que me estoy suscribiendo
 		"order_placed", // exchange
 		false,
 		nil)
@@ -86,10 +86,8 @@ func ConsumeOrderPlaced() error {
 				fmt.Println("Error during parse")
 				continue
 			}
-			// l := logger.WithField(log.LOG_FIELD_CORRELATION_ID, getConsumeOrderPlacedCorrelationId(articleMessage))
-			// l.Info("Incoming order_placed :", string(body))
 
-			ProcessOrderPlaced(articleMessage) //TODO: Handle any possible error
+			ProcessOrderPlaced(articleMessage)
 
 			if err := d.Ack(false); err != nil {
 				// l.Info("Failed ACK order_placed :", string(body), err)

@@ -39,7 +39,6 @@ func ProcessOrderPlaced(data *ConsumeOrderPlacedDto) {
 	for stockStatus := range ch {
 		if !stockStatus.hasStock {
 			if err := emitNotEnoughStock(stockStatus.article.ArticleId, stockStatus.article.Quantity); err != nil {
-				//TODO: Place an event in the event bus notifying that the order cant be processed
 				fmt.Println("ERROR AL EMITER NOT ENOUGH STOCK", err)
 				return
 			}
@@ -66,7 +65,6 @@ func ProcessOrderPlaced(data *ConsumeOrderPlacedDto) {
 			}
 
 			if _, err := events.CreateEvent(decDto); err != nil {
-				//TODO: Place an event in the event bus notifying that the order cant be processed
 				fmt.Println("ERROR AL CREAR EVENTO", err)
 				return
 			}
@@ -74,9 +72,9 @@ func ProcessOrderPlaced(data *ConsumeOrderPlacedDto) {
 			if _, err := stockviews.GenerateStockViewNotify(article.ArticleId); err != nil {
 				fmt.Println("ERROR AL REGENERAR STOCKVIEWS", article.ArticleId)
 			}
+
 		}(article)
 	}
 	wg.Wait()
 
-	return
 }

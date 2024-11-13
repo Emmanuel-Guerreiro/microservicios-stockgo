@@ -3,13 +3,14 @@ package rest
 import (
 	"emmanuel-guerreiro/stockgo/lib"
 	"emmanuel-guerreiro/stockgo/security"
+	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func ProtectedMiddleware(c *gin.Context) {
-	_, err := validateToken(c)
+	user, err := validateToken(c)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -17,6 +18,7 @@ func ProtectedMiddleware(c *gin.Context) {
 	}
 	// ctx := GinCtx(c)
 	// c.Set("logger", log.Get(ctx...).WithField(log.LOG_FIELD_USER_ID, user.ID))
+	fmt.Println("ACCESS WITH USER ID - ", user.ID)
 }
 
 // get token from Authorization header

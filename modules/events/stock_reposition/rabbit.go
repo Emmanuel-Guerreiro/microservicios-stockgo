@@ -32,7 +32,7 @@ func ConsumeRepositionEvent() error {
 		nil,                // arguments
 	)
 	if err != nil {
-		fmt.Errorf("%s", err.Error())
+		fmt.Println(err.Error())
 		return err
 	}
 
@@ -76,8 +76,7 @@ func ConsumeRepositionEvent() error {
 
 			err = json.Unmarshal(body, newMessage)
 			if err != nil {
-				fmt.Errorf("%s", err.Error())
-				//TODO: Should requeue message?
+				fmt.Println(err.Error())
 				continue
 			}
 
