@@ -23,3 +23,10 @@ type placeStockAvailableMessageDto struct {
 	ArticleId string `json:"articleId" example:"ArticleId"`
 	Amount    int    `json:"amount"`
 }
+
+// {
+// 	"message":{
+// 		"articleId": "123",
+// 		"amount": 10
+// 	}
+// }

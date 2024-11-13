@@ -2,7 +2,8 @@ package main
 
 import (
 	"emmanuel-guerreiro/stockgo/lib/db"
-	rabbit "emmanuel-guerreiro/stockgo/rabbit/consume"
+	"emmanuel-guerreiro/stockgo/rabbit"
+
 	"emmanuel-guerreiro/stockgo/rest"
 )
 

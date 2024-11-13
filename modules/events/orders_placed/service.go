@@ -7,28 +7,27 @@ import (
 	"sync"
 )
 
-func ProcessOrderPlaced(data *ConsumeOrderPlacedDto) {
-	fmt.Println("WILL PROCESS ORDER")
-	var wg1 sync.WaitGroup
+type stockStatus struct {
+	hasStock bool
+	article  *ConsumeOrderPlacedArticleDto
+}
 
-	/*
-		TODO: Should be an Article channel to facilitate which articles are not available?
-		TODO: If the stock is below a configured amount should I use a distributed mutex in order to avoid illegal stock values?
-	*/
-	//If any of the articles cant provide the required stock
-	//Will not process the order
-	//And notify through the event bus
-	ch := make(chan bool)
+func ProcessOrderPlaced(data *ConsumeOrderPlacedDto) {
+	var wg1 sync.WaitGroup
+	ch := make(chan *stockStatus)
 	for _, article := range data.Message.Articles {
 		wg1.Add(1)
 		go func(article *ConsumeOrderPlacedArticleDto) {
 			defer wg1.Done()
 			v, err := stockviews.FindOneById(article.ArticleId)
 			if err != nil || v == nil { //Puede pasar que no exista el article?
-				ch <- false
+				ch <- &stockStatus{hasStock: false, article: nil}
 			}
-
-			ch <- v.Stock > article.Quantity
+			art := article
+			q := article.Quantity
+			s := v.Stock
+			hs := s > q
+			ch <- &stockStatus{hasStock: hs, article: art}
 		}(article)
 	}
 
@@ -37,13 +36,18 @@ func ProcessOrderPlaced(data *ConsumeOrderPlacedDto) {
 		close(ch)
 	}()
 
-	for hasStock := range ch {
-		if !hasStock {
-			//TODO: Place an event in the event bus notifying that the order cant be processed
+	for stockStatus := range ch {
+		if !stockStatus.hasStock {
+			if err := emitNotEnoughStock(stockStatus.article.ArticleId, stockStatus.article.Quantity); err != nil {
+				//TODO: Place an event in the event bus notifying that the order cant be processed
+				fmt.Println("ERROR AL EMITER NOT ENOUGH STOCK", err)
+				return
+			}
 			fmt.Println("Stock insufficient for one or more articles.")
 			return
 		}
 	}
+
 	//For each article, will decrement the stock by appending the new decrement stock events
 	//And recalculate the stock view
 	var wg sync.WaitGroup
@@ -58,6 +62,7 @@ func ProcessOrderPlaced(data *ConsumeOrderPlacedDto) {
 					ArticleId: article.ArticleId,
 					Quantity:  article.Quantity,
 				},
+				EventStatus: events.Success,
 			}
 
 			if _, err := events.CreateEvent(decDto); err != nil {
@@ -66,8 +71,7 @@ func ProcessOrderPlaced(data *ConsumeOrderPlacedDto) {
 				return
 			}
 
-			if _, err := stockviews.GenerateStockView(article.ArticleId); err != nil {
-				//TODO:Should notify to somewhere?
+			if _, err := stockviews.GenerateStockViewNotify(article.ArticleId); err != nil {
 				fmt.Println("ERROR AL REGENERAR STOCKVIEWS", article.ArticleId)
 			}
 		}(article)

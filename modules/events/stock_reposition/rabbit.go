@@ -23,13 +23,13 @@ func ConsumeRepositionEvent() error {
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		"hola",   // name
-		"fanout", // type
-		false,    // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
+		"stock_reposition", // name
+		"direct",           // type
+		false,              // durable
+		false,              // auto-deleted
+		false,              // internal
+		false,              // no-wait
+		nil,                // arguments
 	)
 	if err != nil {
 		fmt.Errorf("%s", err.Error())
@@ -37,14 +37,25 @@ func ConsumeRepositionEvent() error {
 	}
 
 	q, err := ch.QueueDeclare(
-		"hello", // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
+		"stock_reposition", // name
+		false,              // durable
+		false,              // delete when unused
+		false,              // exclusive
+		false,              // no-wait
+		nil,                // arguments
 	)
 	if err != nil {
+		return err
+	}
+
+	err = ch.QueueBind(
+		q.Name,             // queue name
+		"stock_reposition", // routing key
+		"stock_reposition", // exchange
+		false,
+		nil)
+	if err != nil {
+		// logger.Error(err)
 		return err
 	}
 

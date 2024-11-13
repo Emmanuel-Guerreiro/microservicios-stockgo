@@ -4,5 +4,5 @@ services:
       context: .
     container_name: stock-auth-go-local
     ports:
-      - "42069:42069"
+      - "42070:42070"
     image: prod-auth-go-local

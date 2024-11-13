@@ -18,3 +18,7 @@ type ReplaceStockViewDto struct {
 	Stock   int       `json:"stock"`
 	Updated time.Time `json:"updatedAt"`
 }
+
+type StockConsultEvent struct {
+	ArticleId string `json:"articleId"`
+}

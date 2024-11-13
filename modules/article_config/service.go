@@ -2,11 +2,33 @@ package artconfig
 
 import (
 	"context"
+	"emmanuel-guerreiro/stockgo/lib"
 	"time"
 )
 
-func findOneById(id string, ctx ...interface{}) (*ArticleConfig, error) {
+func FindOneById(id string, ctx ...interface{}) (*ArticleConfig, error) {
 	return findByID(id, ctx)
+}
+
+func FindOrCreateDefault(id string, ctx context.Context) (*ArticleConfig, error) {
+	articleConfig, err := findByArticleId(id)
+	if err != nil {
+		return nil, err
+	}
+	if articleConfig == nil {
+		articleConfig, err = createDefaultArticleConfig(id, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return articleConfig, nil
+}
+
+func findAll(page int, size int, ctx context.Context) ([]ArticleConfig, error) {
+	pagination := lib.GetPagination(page, size)
+
+	return findAllPaginated(pagination, ctx)
 }
 
 func createArticleConfig(articleConfig *CreateArticleConfigDto, ctx context.Context) (*ArticleConfig, error) {
@@ -17,7 +39,7 @@ func createArticleConfig(articleConfig *CreateArticleConfigDto, ctx context.Cont
 		return nil, err
 	}
 
-	return findOneById(id, ctx)
+	return FindOneById(id, ctx)
 }
 
 func replaceArticleConfig(id string, articleConfig *ReplaceArticleConfigDto, ctx context.Context) (*ArticleConfig, error) {
@@ -30,7 +52,7 @@ func replaceArticleConfig(id string, articleConfig *ReplaceArticleConfigDto, ctx
 		return nil, ErrID
 	}
 
-	return findOneById(id, ctx)
+	return FindOneById(id, ctx)
 }
 
 func deleteArticleConfig(id string, ctx context.Context) (*ArticleConfig, error) {
@@ -49,6 +71,16 @@ func deleteArticleConfig(id string, ctx context.Context) (*ArticleConfig, error)
 	}
 
 	return art, nil
+}
+
+// TODO: Implement a general level project configuration
+// and fetch from there
+func createDefaultArticleConfig(id string, ctx context.Context) (*ArticleConfig, error) {
+	articleConfig := &CreateArticleConfigDto{
+		ArticleId:        id,
+		AlertMinQuantity: 1,
+	}
+	return createArticleConfig(articleConfig, ctx)
 }
 
 func createDtoToArticleConfig(articleConfig *CreateArticleConfigDto) *ArticleConfig {

@@ -29,7 +29,7 @@ func GetEnv() *Configuration {
 func load() *Configuration {
 	// Default
 	result := &Configuration{
-		Port:              42069,
+		Port:              42070,
 		RabbitURL:         "amqp://localhost:5672",
 		MongoURL:          "mongodb://localhost:27017",
 		SecurityServerURL: "http://localhost:3000",

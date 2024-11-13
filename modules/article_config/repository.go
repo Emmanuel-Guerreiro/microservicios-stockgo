@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var ErrID = lib.NewValidationError().Add("id", "Invalid")
@@ -38,6 +39,32 @@ func findByID(id string, ctx ...interface{}) (*ArticleConfig, error) {
 	}
 
 	return &articleConfig, nil
+}
+
+func findByArticleId(id string) (*ArticleConfig, error) {
+	var articleConfig ArticleConfig
+
+	if err := dbCollection().FindOne(context.TODO(), bson.M{"articleId": id}).Decode(&articleConfig); err != nil {
+		return nil, err
+	}
+
+	return &articleConfig, nil
+}
+
+func findAllPaginated(pagination *lib.Pagination, ctx context.Context) ([]ArticleConfig, error) {
+	var articleConfig []ArticleConfig
+	optionsFind := options.Find().SetSkip(pagination.Skip).SetLimit(pagination.Limit)
+
+	cursor, err := dbCollection().Find(ctx, bson.M{}, optionsFind)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = cursor.All(context.TODO(), &articleConfig); err != nil {
+		return nil, err
+	}
+
+	return articleConfig, nil
 }
 
 func create(articleConfig *CreateArticleConfigDto, ctx context.Context) (id string, err error) {

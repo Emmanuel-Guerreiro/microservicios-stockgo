@@ -17,3 +17,10 @@ type CreateArticleConfigDto struct {
 type ReplaceArticleConfigDto struct {
 	AlertMinQuantity int `bson:"alertMinQuantity" json:"alertMinQuantity" validate:"required,min=1,max=100"`
 }
+
+type ArticleFindResponsePaginated struct {
+	Status int             `json:"status"`
+	Data   []ArticleConfig `json:"data"`
+	Page   int             `json:"page"`
+	Length int             `json:"length"`
+}

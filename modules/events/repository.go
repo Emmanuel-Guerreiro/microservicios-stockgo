@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var ErrID = lib.NewValidationError().Add("id", "Invalid")
@@ -15,11 +16,26 @@ var ErrType = lib.NewValidationError().Add("type", "Invalid")
 
 var collection *mongo.Collection
 
+func createPartialIndex(collection *mongo.Collection) error {
+	// Define the index model with the field you want to index.
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{{Key: "type", Value: 1}, {Key: "snapshotEvent.articleId", Value: 1}}, // 1 for ascending order
+		Options: options.Index().SetPartialFilterExpression(bson.D{
+			{Key: "type", Value: Snapshot},
+		}),
+	}
+
+	// Create the index on the collection
+	_, err := collection.Indexes().CreateOne(context.TODO(), indexModel)
+	return err
+}
+
 func dbCollection() *mongo.Collection {
 
 	if collection == nil {
 		database := db.Get()
-		collection = database.Collection("article_config")
+		collection = database.Collection("events")
+		createPartialIndex(collection) //Genera el index para filtrar mas rapido los snapshots
 	}
 
 	return collection
@@ -42,46 +58,41 @@ func findAllByType(eventType EventType) (*[]Event, error) {
 }
 
 func findArticleStockById(articleID string) (*ArticleStockDto, error) {
-	// create group stage
-	_id, err := bson.ObjectIDFromHex(articleID)
-	// Create match stage to filter events by article ID and relevant types
-	// Create match stage to filter events by article ID and relevant types
 	matchStage := bson.D{
 		{Key: "$match", Value: bson.D{
-			{Key: "article.id", Value: _id},
-			{Key: "type", Value: bson.D{
-				{Key: "$in", Value: bson.A{"stock_reposition", "stock_decrement"}},
+			{Key: "$or", Value: bson.A{
+				bson.D{{Key: "type", Value: "stock_reposition"}, {Key: "repositionEvent.articleId", Value: articleID}},
+				bson.D{{Key: "type", Value: "stock_decrement"}, {Key: "decrementEvent.articleId", Value: articleID}},
 			}},
 		}},
 	}
-
-	// Create group stage to calculate the total amount
-	groupStage := bson.D{
-		{Key: "$group", Value: bson.D{
-			{Key: "_id", Value: "$article.id"},
-			{Key: "totalAmount", Value: bson.D{
-				{Key: "$sum", Value: bson.D{
-					{Key: "$cond", Value: bson.D{
-						{Key: "if", Value: bson.D{{Key: "$eq", Value: bson.A{"$type", "stock_reposition"}}}},
-						{Key: "then", Value: "$article.amount"},
-						{Key: "else", Value: bson.D{{Key: "$multiply", Value: bson.A{"$article.amount", -1}}}},
-					}},
-				}},
-			}},
-		}},
-	}
-
-	// pass the pipeline to the Aggregate() method
-	cursor, err := dbCollection().Aggregate(context.TODO(), mongo.Pipeline{matchStage, groupStage})
+	cursor, err := dbCollection().Aggregate(context.TODO(), mongo.Pipeline{matchStage})
 	if err != nil {
 		return nil, err
 	}
 
-	var results []ArticleStockDto
+	var results []Event
 	if err = cursor.All(context.TODO(), &results); err != nil {
 		return nil, err
 	}
-	return &results[0], nil
+
+	if len(results) == 0 {
+		return nil, nil
+	}
+
+	var totalStock int = 0
+	for _, result := range results {
+		if result.Type == Reposition {
+			totalStock += result.RepositionEvent.Quantity
+		} else if result.Type == Decrement {
+			totalStock -= result.DecrementEvent.Quantity
+		}
+	}
+
+	return &ArticleStockDto{
+		ArticleId: articleID,
+		Stock:     totalStock,
+	}, nil
 }
 
 func create(event *CreateEventDto) (string, error) {

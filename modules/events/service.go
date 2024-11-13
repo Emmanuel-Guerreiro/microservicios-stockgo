@@ -7,6 +7,10 @@ func FindArticleStockFromEvents(articleId string) (*ArticleStockDto, error) {
 		return nil, err
 	}
 
+	if articleStock == nil {
+		return nil, nil
+	}
+
 	return articleStock, nil
 }
 

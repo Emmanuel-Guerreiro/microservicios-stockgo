@@ -30,3 +30,23 @@ _Local_
 ```
 make run
 ```
+
+Interfaz RABBITMQ
+
+```
+{
+"correlation_id":"123123",
+"routing_key":"Remote RoutingKey to Reply",
+"exchange":"order-placed",
+  "message": {
+    "cartId": 123123,
+    "userId": "testing",
+    "articles": [
+      {
+        "articleId": 123,
+        "quantity": 10
+      }
+    ]
+  }
+}
+```

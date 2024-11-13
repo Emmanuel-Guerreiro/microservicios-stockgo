@@ -2,12 +2,14 @@ package artconfig
 
 import (
 	"emmanuel-guerreiro/stockgo/lib"
+	"fmt"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func findOne(c *gin.Context) {
-	res, err := findOneById(c.Param("id"), c)
+	res, err := FindOneById(c.Param("id"), c)
 
 	if err != nil {
 		lib.AbortWithError(c, err)
@@ -15,6 +17,33 @@ func findOne(c *gin.Context) {
 	}
 
 	c.JSON(200, res)
+}
+
+func find(c *gin.Context) {
+	//TODO: Implement sorting
+	//TODO: Implement filtering
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
+
+	res, err := findAll(page, size, c)
+	if err != nil {
+		lib.AbortWithError(c, err)
+		return
+	}
+
+	if res == nil {
+		fmt.Println("IM RES NIL")
+		res = make([]ArticleConfig, 0)
+	}
+
+	jsonRes := ArticleFindResponsePaginated{
+		Status: 200,
+		Data:   res,
+		Page:   page,
+		Length: len(res),
+	}
+
+	c.JSON(200, jsonRes)
 }
 
 func post(c *gin.Context) {
@@ -64,6 +93,7 @@ func InitController(router *gin.RouterGroup) {
 	prodConfig := router.Group("/article-config")
 	prodConfig.GET("/:id", findOne)
 	prodConfig.POST("", post)
+	prodConfig.GET("", find)
 	prodConfig.PUT("/:id", put)
 	prodConfig.DELETE("/:id", delete)
 }
