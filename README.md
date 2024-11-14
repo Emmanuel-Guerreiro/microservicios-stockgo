@@ -61,7 +61,7 @@ make run
 }
 ```
 
-_ejemplo:_
+_Ejemplo:_
 
 ```
 {
@@ -84,7 +84,7 @@ _ejemplo:_
 }
 ```
 
-_ejemplo:_
+_Ejemplo:_
 
 ```
 {
@@ -112,7 +112,7 @@ _ejemplo:_
 }
 ```
 
-_ejemplo:_
+_Ejemplo:_
 
 ```
 {
@@ -144,7 +144,7 @@ _ejemplo:_
 }
 ```
 
-_ejemplo:_
+_Ejemplo:_
 
 ```
  {
@@ -186,7 +186,7 @@ _ejemplo:_
 
 ```
 
-_ejemplo:_
+_Ejemplo:_
 
 ```
 {
