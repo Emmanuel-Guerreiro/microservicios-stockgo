@@ -12,7 +12,7 @@ Se implementa el microservicio de gestion de stocks basado en las definiciones d
 
 Este permite saber el stock de un producto y poder incrementar y decrementar el stock.
 
-Está basado en los patrones Event Sourcing y CQRS.
+Implementa los patrones Event Sourcing y CQRS para llevar registro de los cambios en el stock y generar una vista de stock mas eficiente para la consulta.
 
 ## Requisitos
 
