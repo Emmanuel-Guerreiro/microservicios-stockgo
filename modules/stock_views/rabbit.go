@@ -2,6 +2,7 @@ package stockviews
 
 import (
 	"emmanuel-guerreiro/stockgo/lib"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -31,7 +32,7 @@ func ConsumeStockConsultEvent() error {
 		nil,                // arguments
 	)
 	if err != nil {
-		fmt.Errorf("%s", err.Error())
+		fmt.Println(err.Error())
 		return err
 	}
 
@@ -72,12 +73,11 @@ func ConsumeStockConsultEvent() error {
 
 	go func() {
 		for d := range msgs {
-			fmt.Printf("Received a message: %s\n", d.Body)
-			// fmt.Printf("Message: %s\n", d.Body)
-			// fmt.Printf("Message properties: %v\n", d.Properties)
-			// fmt.Printf("Delivery tag: %d\n", d.DeliveryTag)
-			// fmt.Printf("Ack: %v\n", d.Ack)
-			// fmt.Printf("Nack: %v\n", d.Nack)
+			newMessage := &stockConsultDto{}
+			body := d.Body
+
+			err = json.Unmarshal(body, newMessage)
+			handleStockViewConsulting(newMessage)
 		}
 	}()
 
@@ -89,7 +89,7 @@ func ListenerStockConsultEvent() {
 	for {
 		err := ConsumeStockConsultEvent()
 		if err != nil {
-			fmt.Errorf("%s", err.Error())
+			fmt.Println(err.Error())
 		}
 		// logger.Info("RabbitMQ consumePlaceOrder conectando en 5 segundos.")
 		time.Sleep(5 * time.Second)

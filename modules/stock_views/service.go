@@ -5,6 +5,9 @@ import (
 	artconfig "emmanuel-guerreiro/stockgo/modules/article_config"
 	"emmanuel-guerreiro/stockgo/modules/events"
 	requirereposition "emmanuel-guerreiro/stockgo/modules/require_reposition"
+	rabbitEmitter "emmanuel-guerreiro/stockgo/rabbit/emit"
+	"encoding/json"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -72,6 +75,52 @@ func GenerateStockViewNotify(id string) (*StockView, error) {
 	}
 
 	return sv, nil
+}
+
+func handleStockViewConsulting(message *stockConsultDto) error {
+
+	ch, err := rabbitEmitter.GetChannel(context.Background())
+	if err != nil {
+		fmt.Println("Error getting channel stock_consulting")
+		return err
+	}
+	if err = ch.ExchangeDeclare("stock_consulting", "direct"); err != nil {
+		fmt.Println("Error declaring exchange stock_consulting")
+		return err
+	}
+
+	articleId := message.ArticleId
+
+	sv, err := GenerateStockView(articleId)
+	if err != nil {
+		fmt.Println("ERROR AL REGENERAR STOCKVIEWS", articleId)
+		return err
+	}
+
+	data := StockViewResponseDto{
+		ArticleId: articleId,
+		Stock:     sv.Stock,
+		CreatedAt: sv.Created.String(),
+		UpdatedAt: sv.Updated.String(),
+	}
+	body, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println("ERROR AL MARSHAL STOCKVIEWS", articleId)
+		return err
+	}
+
+	fmt.Println("Emited stock_consulting", data)
+	err = ch.Publish(
+		"stock_consulting", // exchange
+		"stock_response",   // routing key
+		body,
+	)
+	if err != nil {
+		fmt.Println("Error publishing message stock_consulting")
+		return err
+	}
+
+	return nil
 }
 
 func articleStockDtoToCreateStockViewDto(dto *events.ArticleStockDto) *CreateStockViewDto {

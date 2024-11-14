@@ -22,3 +22,14 @@ type ReplaceStockViewDto struct {
 type StockConsultEvent struct {
 	ArticleId string `json:"articleId"`
 }
+
+type StockViewResponseDto struct {
+	ArticleId string `json:"articleId"`
+	Stock     int    `json:"stock"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+}
+
+type stockConsultDto struct {
+	ArticleId string `json:"articleId"`
+}

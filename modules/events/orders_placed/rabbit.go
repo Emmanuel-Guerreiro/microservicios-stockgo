@@ -108,7 +108,7 @@ func ListenerOrderPlaced() {
 	for {
 		err := ConsumeOrderPlaced()
 		if err != nil {
-			fmt.Errorf("%s", err.Error())
+			fmt.Println(err.Error())
 		}
 		// logger.Info("RabbitMQ consumePlaceOrder conectando en 5 segundos.")
 		time.Sleep(5 * time.Second)

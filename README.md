@@ -69,7 +69,7 @@ _Ejemplo:_
 }
 ```
 
-##### Escucha
+##### Emit
 
 - **Exchange:** stock_consulting
 - **Tipo:** direct
@@ -80,7 +80,9 @@ _Ejemplo:_
 ```
 {
   "articleId": string,
-  "stock": int
+  "stock": int,
+  "createdAt": string,
+  "updatedAt": string
 }
 ```
 
@@ -89,7 +91,9 @@ _Ejemplo:_
 ```
 {
   "articleId": "123",
-  "stock": 10
+  "stock": 10,
+  "createdAt": "2023-01-01T00:00:00Z",
+  "updatedAt": "2023-01-01T00:00:00Z"
 }
 ```
 
