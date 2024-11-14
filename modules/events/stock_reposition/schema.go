@@ -12,16 +12,8 @@ type consumeStockRepositionMessageDto struct {
 	Amount    int    `json:"amount"`
 }
 
-// Si el consume de stock reposition resulta en que un producto pase de no tener stock a tener
-// Se envia el siguiente evento al queue de stock available
-type placeStockAvailableDto struct {
-	CorrelationId string                         `json:"correlation_id" example:"123123" `
-	Message       *placeStockAvailableMessageDto `json:"message"`
-}
-
 type placeStockAvailableMessageDto struct {
 	ArticleId string `json:"articleId" example:"ArticleId"`
-	Amount    int    `json:"amount"`
 }
 
 // {

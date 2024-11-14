@@ -1,7 +1,9 @@
 package stockreposition
 
 import (
+	"context"
 	"emmanuel-guerreiro/stockgo/lib"
+	rabbit "emmanuel-guerreiro/stockgo/rabbit/emit"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -10,6 +12,7 @@ import (
 )
 
 func ConsumeRepositionEvent() error {
+
 	conn, err := amqp.Dial(lib.GetEnv().RabbitURL)
 	if err != nil {
 		return err
@@ -97,4 +100,42 @@ func ListenerReposition() {
 		// logger.Info("RabbitMQ consumePlaceOrder conectando en 5 segundos.")
 		time.Sleep(5 * time.Second)
 	}
+}
+
+func emitStockNowAvailable(articleId string) error {
+	ch, err := rabbit.GetChannel(context.Background())
+	if err != nil {
+		fmt.Println("Error getting channel stock_available")
+		return nil
+	}
+
+	if err = ch.ExchangeDeclare("stock_available", "fanout"); err != nil {
+		fmt.Println("Error declaring exchange stock_available")
+		return err
+	}
+
+	send := placeStockAvailableMessageDto{
+		ArticleId: articleId,
+	}
+
+	body, err := json.Marshal(send)
+	if err != nil {
+		fmt.Println("Error marshaling message stock_available")
+		return err
+	}
+
+	err = ch.Publish(
+		"stock_available", // exchange
+		"",                // routing key -> No lleva RK porque es fanout el exchange al que me estoy suscribiendo
+		body,
+	)
+	if err != nil {
+		fmt.Println("Error publishing message stock_available")
+
+		return err
+	}
+
+	fmt.Println("Emited stock_available")
+
+	return nil
 }
