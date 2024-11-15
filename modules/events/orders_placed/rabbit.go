@@ -86,7 +86,7 @@ func ConsumeOrderPlaced() error {
 				fmt.Println("Error during parse")
 				continue
 			}
-
+			fmt.Println("HANDLING NEW MESSAGE ---------> ORDER PLACED", articleMessage)
 			ProcessOrderPlaced(articleMessage)
 
 			if err := d.Ack(false); err != nil {

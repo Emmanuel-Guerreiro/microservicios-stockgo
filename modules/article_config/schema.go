@@ -19,7 +19,6 @@ type ReplaceArticleConfigDto struct {
 }
 
 type ArticleFindResponsePaginated struct {
-	Status int             `json:"status"`
 	Data   []ArticleConfig `json:"data"`
 	Page   int             `json:"page"`
 	Length int             `json:"length"`

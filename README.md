@@ -6,6 +6,13 @@ Legajo: 47262
 Año: 2024
 ```
 
+Ordenar:
+Casos de uso
+Interfaz
+
+EXPLICAR MEJOR LOS CU
+Aclarar el CU de re-calculo de la proyeccion de stock -> Cu interno, derivado
+
 ## Descripción
 
 Se implementa el microservicio de gestion de stocks basado en las definiciones de la catedra
@@ -39,144 +46,205 @@ Para correrlo localmente es requerido tener instalados:
 make run
 ```
 
+## Modelo de datos
+
+_Evento_
+
+```
+{
+  ID: string
+  Type: string
+  DecrementEvent: EventoDecrement
+  RepositionEvent: EventoReposition
+  SnapshotEvent: EventoSnapshot
+  Created: date
+  EventStatus: date
+}
+
+```
+
+DecrementEvent
+
+```
+{
+	ArticleId: string
+	Quantity : int
+}
+```
+
+RepositionEvent
+
+```
+{
+  ArticleId: string
+  Quantity: int
+}
+```
+
+SnapshotEvent
+
+```
+{
+  ArticleId: string
+  Quantity:  int
+}
+```
+
+**Proyeccion stock**
+
+```
+{
+  ArticleId: string
+  Stock: string
+  Created: date
+  Updated: date
+}
+```
+
 ## Casos de uso
+
+### CU: Cálculo de stock de un producto
+
+- Se calcula a partir del historial de eventos para un producto
+- No puede ser negativo
+
+### CU: Re-compra de stock
+
+- Si el stock cae por debajo del umbral configurado, se solicita una re-compra para un producto
+- Se envia el evento, junto a un id para poder trackear la orden
+- Si un producto no tiene eventos de stock, se define en 0.
 
 ### CU: Consultar stock
 
-- Ante un evento de consulta de stock recibido a través de un mensaje asincrono se devuelve, el stock actual del producto de manera asincrona.
+- Se devuelve el stock actual de un producto, a partir de su articleId
+- Si no se encuentra el stock en la proyección, se ejecuta el `CU: Cálculo de stock de un producto`..
 
-#### Interfaz RABBITMQ
+### CU: Configurar stock mínimo producto
 
-##### Escucha
+- Un usuario registrado en el sistema puede configurar el stock mínimo para un producto.
+- El stock mínimo no puede ser negativo
+- Se almacenan la fecha de modificación
+
+### CU: reposición de stock
+
+- Desde otro servicio se puede generar un ingreso de stock para un producto
+- La cantidad debe ser no negativa
+- Se almacena el nuevo stock junto con la fecha de ingreso
+- Se almacena el valor absoluto del movimiento de stock
+- Ejecuta el `CU: Cálculo de stock de un producto`.
+
+### CU: disminución de stock
+
+- Otro servicio puede generar una disminución de stock para un producto
+- La cantidad debe ser no negativa
+- Se almacena el nuevo stock junto con la fecha de ingreso
+- Se almacena el valor absoluto del movimiento de stock
+- Ejecuta el `CU: Cálculo de stock de un producto`.
+
+## Interfaz RABBITMQ
+
+### Escucha - Exchange: stock_consulting - Routing Key: get_stock
 
 - **Exchange:** stock_consulting
 - **Tipo:** direct
 - **Routing Key:** get_stock
 
-###### Mensaje
+##### Mensaje
 
 ```
+
 {
   "articleId": string
 }
+
 ```
 
 _Ejemplo:_
 
 ```
+
 {
   "articleId": "123"
 }
+
 ```
 
-##### Emit
+### Emit - Exchange: stock_consulting - Routing Key: stock_response
 
 - **Exchange:** stock_consulting
 - **Tipo:** direct
 - **Routing Key:** stock_response
 
-###### Mensaje
+#### Mensaje
 
 ```
+
 {
   "articleId": string,
   "stock": int,
   "createdAt": string,
   "updatedAt": string
 }
+
 ```
 
 _Ejemplo:_
 
 ```
+
 {
   "articleId": "123",
   "stock": 10,
   "createdAt": "2023-01-01T00:00:00Z",
   "updatedAt": "2023-01-01T00:00:00Z"
 }
-```
-
-### CU: Configurar stock mínimo producto
-
-- Se configura el stock mínimo para un producto a través de la interfaz REST. Definiendo a partir de que stock hay que emitir un evento de reposición a la cola de eventos asincrona.
-
-#### Interfaz REST
-
-##### POST
-
-- **URL:** /article-config
-
-###### Body
 
 ```
-{
-  "articleId": string,
-  "alertMinQuantity": int
-}
-```
 
-_Ejemplo:_
-
-```
-{
-  "articleId": "123",
-  "alertMinQuantity": 10
-}
-```
-
-### CU: reposición de stock
-
-- Ante un evento de reposición de stock se almacena el evento de reposición y se re-calcula el stock del producto en la vista. Se realiza de manera asincrona.
-
-#### Interfaz RABBITMQ
-
-##### Escucha
+### Escucha - Exchange: stock_reposition - Routing Key: stock_reposition
 
 - **Exchange:** stock_reposition
 - **Tipo:** direct
 - **Routing Key:** stock_reposition
 
-###### Mensaje
+#### Mensaje
 
 ```
- {
- 	"message":{
-		"articleId": "string",
-		"amount": int
-	}
+
+{
+  "message":{
+    "articleId": "string",
+    "amount": int
+  }
 }
+
 ```
 
 _Ejemplo:_
 
 ```
- {
- 	"message":{
-		"articleId": "123",
-		"amount": 10
-	}
+
+{
+  "message":{
+    "articleId": "123",
+    "amount": 10
+  }
 }
+
 ```
 
-### CU: disminución de stock
-
-- Ante un evento de order_placed (Emitido actualmente por el microservicio de orders) se persiste un evento de decremento de stock y se calcula el stock del producto en la vista. Se realiza de manera asincrona.\
-  Ante stock no disponible para completar la orden se emite un evento de not_enough_stock a través de la cola de eventos asincrona
-
-#### Interfaz RABBITMQ
-
-##### Escucha
+### Escucha - Exchange: order_placed
 
 - **Exchange:** order_placed
 - **Tipo:** fanout
 
-###### Mensaje
+#### Mensaje
 
 ```
+
 {
   "correlation_id": string,
-  "message":{
+  "message": {
     "cartId": string,
     "userId": string,
     "articles":[
@@ -193,6 +261,7 @@ _Ejemplo:_
 _Ejemplo:_
 
 ```
+
 {
   "correlation_id":"123123",
   "message":{
@@ -208,3 +277,126 @@ _Ejemplo:_
 }
 
 ```
+
+## Interfaz REST
+
+### POST - URL: /article-config
+
+- **URL:** /article-config
+- **Method:** POST
+- **Header:**:
+  - **Content-Type:** application/json
+  - **Authorization**: Bearer <token>
+
+#### Body
+
+```
+
+{
+  "articleId": string,
+  "alertMinQuantity": int
+}
+
+```
+
+_Ejemplo:_
+
+```
+
+{
+  "articleId": "123",
+  "alertMinQuantity": 10
+}
+
+```
+
+#### Respuesta:
+
+##### Creado correctamente
+
+- _Status Code_: 201 - Created
+- _Body_:
+
+```
+{
+  "articleId": string,
+  "alertMinQuantity": int,
+  "createdAt": string,
+  "updatedAt": string
+}
+```
+
+#### Errores
+
+- _Status Code_: 400 - Bad Request
+
+### GET - URL: /article-config/:id
+
+- **URL:** /article-config
+- **Method:** GET
+- **Params:**
+  - **id**: string
+- **Header:**:
+  - **Content-Type:** application/json
+  - **Authorization**: Bearer <token>
+
+#### Respuesta:
+
+##### Encontrado
+
+- _Status Code_: 200
+- _Body_:
+
+```
+{
+  "articleId": string,
+  "alertMinQuantity": int,
+  "createdAt": string,
+  "updatedAt": string
+}
+```
+
+#### Errores
+
+- _Status Code_: 400 - Bad Request
+
+### GET - URL: /article-config/
+
+- **URL:** /article-config
+- **Method:** GET
+- **Search Params:**
+  - **page**: int
+  - **size**: int
+- **Header:**:
+  - **Content-Type:** application/json
+  - **Authorization**: Bearer <token>
+
+#### Notas
+
+- Este endpoint está paginado
+
+#### Respuesta:
+
+##### Encontrado
+
+- _Status Code_: 200
+- _Body_:
+
+```
+{
+  "data": [
+    {
+      "articleId": string,
+      "alertMinQuantity": int,
+      "createdAt": string,
+      "updatedAt": string
+    }
+  ]
+  "page": int
+  "length": int
+}
+```
+
+#### Errores
+
+- _Status Code_: 400 - Bad Request

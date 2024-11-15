@@ -30,7 +30,7 @@ func load() *Configuration {
 	// Default
 	result := &Configuration{
 		Port:              42070,
-		RabbitURL:         "amqp://localhost:5672",
+		RabbitURL:         "amqp://localhost",
 		MongoURL:          "mongodb://localhost:27017",
 		SecurityServerURL: "http://localhost:3000",
 		FluentUrl:         "localhost:24224",

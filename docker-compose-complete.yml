@@ -1,0 +1,118 @@
+# Este es un compose que trae desde github el Dockerfile, compila y crea la imagen.
+# Util para devs porque estamos haciendo build directamente desde el codigo fuente de github.
+# la version linux nos crea una interfaz de red host.docker.internal apuntando a la ip de docker0
+version: "3"
+services:
+  rabbitmq:
+    container_name: ec-rabbitmq-integrador
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    image: "rabbitmq:3.8.3-management"
+  mongo:
+    container_name: ec-mongo-integrador
+    ports:
+      - "27017:27017"
+    image: "mongo:4.0.18-xenial"
+  redis:
+    container_name: ec-redis-integrador
+    ports:
+      - "6379:6379"
+    image: "redis:5.0.9-buster"
+  prod-auth-go:
+    build:
+      context: https://raw.githubusercontent.com/nmarsollier/authgo/master/Dockerfile.prod
+    container_name: prod-auth-go-integrador
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+    ports:
+      - "3000:3000"
+    image: prod-auth-go
+    depends_on:
+      - "rabbitmq"
+      - "mongo"
+  prod-image-go:
+    container_name: prod-image-go-integrador
+    build:
+      context: https://raw.githubusercontent.com/nmarsollier/imagego/master/Dockerfile.prod
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+    ports:
+      - "3001:3001"
+    image: prod-image-go
+    depends_on:
+      - "rabbitmq"
+      - "redis"
+  prod-cataloggo-go:
+    container_name: prod-cataloggo-go-integrador
+    build:
+      context: https://raw.githubusercontent.com/nmarsollier/cataloggo/master/Dockerfile.prod
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+    ports:
+      - "3002:3002"
+    image: prod-cataloggo-go
+    depends_on:
+      - "rabbitmq"
+      - "mongo"
+  prod-cartgo-go:
+    container_name: prod-cartgo-go-integrador
+    build:
+      context: https://raw.githubusercontent.com/nmarsollier/cartgo/master/Dockerfile.prod
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+    environment:
+      - "3003:3003"
+    image: prod-cartgo-go
+    depends_on:
+      - "rabbitmq"
+      - "mongo"
+  prod-orders-go:
+    container_name: prod-orders-go-integrador
+    build:
+      context: https://raw.githubusercontent.com/nmarsollier/ordersgo/master/Dockerfile.prod
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+    ports:
+      - "3004:3004"
+    image: prod-orders-go
+    depends_on:
+      - "rabbitmq"
+      - "mongo"
+  prod-stock-go:
+    build:
+      context: .
+    container_name: prod-stock-go-integrador
+    ports:
+      - "42070:42070"
+    image: prod-stock-go-local
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+    depends_on:
+      - "rabbitmq"
+      - "mongo"
+      - "prod-auth-go"
+  prod-api-cli:
+    container_name: prod-api-cli-integrador
+    build:
+      context: https://raw.githubusercontent.com/nmarsollier/ecommerce_api_client_react/master/Dockerfile.prod
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+    ports:
+      - "4200:80"
+    image: prod-api-cli
+    stdin_open: true
+    depends_on:
+      - "rabbitmq"
+      - "mongo"
+      - "redis"
+      - "prod-auth-go"
+      - "prod-image-go"
+      - "prod-cataloggo-go"
+      - "prod-cartgo-go"
+      - "prod-orders-go"
+      - "prod-stock-go"
+
+networks:
+  default:
+    driver: bridge

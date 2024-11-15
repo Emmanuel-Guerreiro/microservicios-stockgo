@@ -2,7 +2,6 @@ package artconfig
 
 import (
 	"emmanuel-guerreiro/stockgo/lib"
-	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -32,12 +31,10 @@ func find(c *gin.Context) {
 	}
 
 	if res == nil {
-		fmt.Println("IM RES NIL")
 		res = make([]ArticleConfig, 0)
 	}
 
 	jsonRes := ArticleFindResponsePaginated{
-		Status: 200,
 		Data:   res,
 		Page:   page,
 		Length: len(res),
