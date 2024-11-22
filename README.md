@@ -54,9 +54,8 @@ _Evento_
 {
   ID: string
   Type: string
-  DecrementEvent: EventoDecrement
-  RepositionEvent: EventoReposition
-  SnapshotEvent: EventoSnapshot
+  DecrementEvent: DecrementEvent
+  RepositionEvent: RepositionEvent
   Created: date
   EventStatus: date
 }
@@ -81,12 +80,14 @@ RepositionEvent
 }
 ```
 
-SnapshotEvent
+_Article config_
 
 ```
 {
-  ArticleId: string
-  Quantity:  int
+  articleId: string
+  alertMinQuantity: int
+  createdAt: date
+  updatedAt: date
 }
 ```
 
@@ -212,9 +213,10 @@ _Ejemplo:_
 ```
 
 {
-  "message":{
-    "articleId": "string",
-    "amount": int
+  correlation_id: string,
+  message:{
+    articleId: "string",
+    amount: int
   }
 }
 
@@ -323,77 +325,6 @@ _Ejemplo:_
   "alertMinQuantity": int,
   "createdAt": string,
   "updatedAt": string
-}
-```
-
-#### Errores
-
-- _Status Code_: 400 - Bad Request
-
-### GET - URL: /article-config/:id
-
-- **URL:** /article-config
-- **Method:** GET
-- **Params:**
-  - **id**: string
-- **Header:**:
-  - **Content-Type:** application/json
-  - **Authorization**: Bearer <token>
-
-#### Respuesta:
-
-##### Encontrado
-
-- _Status Code_: 200
-- _Body_:
-
-```
-{
-  "articleId": string,
-  "alertMinQuantity": int,
-  "createdAt": string,
-  "updatedAt": string
-}
-```
-
-#### Errores
-
-- _Status Code_: 400 - Bad Request
-
-### GET - URL: /article-config/
-
-- **URL:** /article-config
-- **Method:** GET
-- **Search Params:**
-  - **page**: int
-  - **size**: int
-- **Header:**:
-  - **Content-Type:** application/json
-  - **Authorization**: Bearer <token>
-
-#### Notas
-
-- Este endpoint está paginado
-
-#### Respuesta:
-
-##### Encontrado
-
-- _Status Code_: 200
-- _Body_:
-
-```
-{
-  "data": [
-    {
-      "articleId": string,
-      "alertMinQuantity": int,
-      "createdAt": string,
-      "updatedAt": string
-    }
-  ]
-  "page": int
-  "length": int
 }
 ```
 
