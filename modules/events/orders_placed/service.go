@@ -3,6 +3,7 @@ package ordersplaced
 import (
 	"emmanuel-guerreiro/stockgo/modules/events"
 	stockviews "emmanuel-guerreiro/stockgo/modules/stock_views"
+	"encoding/json"
 	"fmt"
 	"sync"
 )
@@ -38,7 +39,7 @@ func ProcessOrderPlaced(data *ConsumeOrderPlacedDto) {
 
 	for stockStatus := range ch {
 		if !stockStatus.hasStock {
-			if err := emitNotEnoughStock(stockStatus.article.ArticleId, stockStatus.article.Quantity); err != nil {
+			if err := emitNotEnoughStock(stockStatus.article.ArticleId, stockStatus.article.Quantity, data.CorrelationId); err != nil {
 				fmt.Println("ERROR AL EMITER NOT ENOUGH STOCK", err)
 				return
 			}
@@ -69,12 +70,18 @@ func ProcessOrderPlaced(data *ConsumeOrderPlacedDto) {
 				return
 			}
 
-			if _, err := stockviews.GenerateStockViewNotify(article.ArticleId); err != nil {
-				fmt.Println("ERROR AL REGENERAR STOCKVIEWS", article.ArticleId)
+			if _, err := stockviews.GenerateStockViewNotify(article.ArticleId, data.CorrelationId); err != nil {
 			}
 
 		}(article)
 	}
+
 	wg.Wait()
 
+	bodyParsed, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println("ERROR AL MARSHAL STOCKVIEWS", data.CorrelationId)
+		return
+	}
+	fmt.Println("Processed order placed succesfully", string(bodyParsed))
 }

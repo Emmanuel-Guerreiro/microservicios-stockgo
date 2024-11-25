@@ -58,7 +58,7 @@ func GenerateStockView(id string) (*StockView, error) {
 	return sv, nil
 }
 
-func GenerateStockViewNotify(id string) (*StockView, error) {
+func GenerateStockViewNotify(id string, correlationId string) (*StockView, error) {
 	sv, err := GenerateStockView(id)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func GenerateStockViewNotify(id string) (*StockView, error) {
 
 	if config.AlertMinQuantity <= sv.Stock {
 		//Notifico que hace falta comprar
-		requirereposition.EmitNotEnoughStock(id)
+		requirereposition.EmitRequireReposition(id, correlationId)
 	}
 
 	return sv, nil
@@ -93,7 +93,6 @@ func handleStockViewConsulting(message *stockConsultDto) error {
 
 	sv, err := GenerateStockView(articleId)
 	if err != nil {
-		fmt.Println("ERROR AL REGENERAR STOCKVIEWS", articleId)
 		return err
 	}
 
@@ -109,7 +108,7 @@ func handleStockViewConsulting(message *stockConsultDto) error {
 		return err
 	}
 
-	fmt.Println("Emited stock_consulting", data)
+	fmt.Println("Emited stock_consulting", string(body))
 	err = ch.Publish(
 		"stock_consulting", // exchange
 		"stock_response",   // routing key

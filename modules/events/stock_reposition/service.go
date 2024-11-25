@@ -7,8 +7,6 @@ import (
 )
 
 func handleReposition(message *consumeStockRepositionDto) {
-	fmt.Println("AL CONSUMIR AAAAAAAAAAAAAAAAA ->")
-
 	incDto := &events.CreateEventDto{
 		Type: events.Reposition,
 		RepositionEvent: &events.RepositionEvent{
@@ -24,11 +22,10 @@ func handleReposition(message *consumeStockRepositionDto) {
 
 	sv, err := stockviews.GenerateStockView(message.Message.ArticleId)
 	if err != nil {
-
-		fmt.Println("ERROR AL REGENERAR STOCKVIEWS", message.Message.ArticleId)
+		fmt.Println("25 -> ERROR AL REGENERAR STOCKVIEWS", message.Message.ArticleId, err)
 	}
 
 	if sv.Stock == message.Message.Amount { //Se repuso desde el 0 con el stock del ultimo msj
-		emitStockNowAvailable(message.Message.ArticleId)
+		emitStockNowAvailable(message.Message.ArticleId, message.CorrelationId)
 	}
 }

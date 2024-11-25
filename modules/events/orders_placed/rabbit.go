@@ -86,7 +86,6 @@ func ConsumeOrderPlaced() error {
 				fmt.Println("Error during parse")
 				continue
 			}
-			fmt.Println("HANDLING NEW MESSAGE ---------> ORDER PLACED", articleMessage)
 			ProcessOrderPlaced(articleMessage)
 
 			if err := d.Ack(false); err != nil {
@@ -115,7 +114,7 @@ func ListenerOrderPlaced() {
 	}
 }
 
-func emitNotEnoughStock(stockId string, quantity int) error {
+func emitNotEnoughStock(stockId string, quantity int, correlationId string) error {
 	ch, err := rabbit.GetChannel(context.Background())
 	if err != nil {
 		fmt.Println("Error getting channel")
@@ -128,8 +127,9 @@ func emitNotEnoughStock(stockId string, quantity int) error {
 	}
 
 	send := sendOrderPlacedDto{
-		StockId:  stockId,
-		Quantity: quantity,
+		StockId:       stockId,
+		Quantity:      quantity,
+		CorrelationId: correlationId,
 	}
 
 	body, err := json.Marshal(send)
@@ -149,12 +149,13 @@ func emitNotEnoughStock(stockId string, quantity int) error {
 		return err
 	}
 
-	fmt.Println("Emited not_enough_stock")
+	fmt.Println("Emited not_enough_stock", string(body))
 
 	return nil
 }
 
 type sendOrderPlacedDto struct {
-	StockId  string `json:"stock_id"`
-	Quantity int    `json:"quantity"`
+	StockId       string `json:"stock_id"`
+	Quantity      int    `json:"quantity"`
+	CorrelationId string `json:"correlation_id"`
 }

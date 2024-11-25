@@ -102,7 +102,7 @@ func ListenerReposition() {
 	}
 }
 
-func emitStockNowAvailable(articleId string) error {
+func emitStockNowAvailable(articleId string, correlationId string) error {
 	ch, err := rabbit.GetChannel(context.Background())
 	if err != nil {
 		fmt.Println("Error getting channel stock_available")
@@ -115,7 +115,8 @@ func emitStockNowAvailable(articleId string) error {
 	}
 
 	send := placeStockAvailableMessageDto{
-		ArticleId: articleId,
+		ArticleId:     articleId,
+		CorrelationId: correlationId,
 	}
 
 	body, err := json.Marshal(send)
@@ -135,7 +136,7 @@ func emitStockNowAvailable(articleId string) error {
 		return err
 	}
 
-	fmt.Println("Emited stock_available")
+	fmt.Println("Emited stock_available", string(body))
 
 	return nil
 }

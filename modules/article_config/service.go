@@ -4,6 +4,8 @@ import (
 	"context"
 	"emmanuel-guerreiro/stockgo/lib"
 	"time"
+
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 func FindOneById(id string, ctx ...interface{}) (*ArticleConfig, error) {
@@ -12,14 +14,17 @@ func FindOneById(id string, ctx ...interface{}) (*ArticleConfig, error) {
 
 func FindOrCreateDefault(id string, ctx context.Context) (*ArticleConfig, error) {
 	articleConfig, err := findByArticleId(id)
-	if err != nil {
+	if err == nil {
+		return articleConfig, nil
+	}
+
+	if err != mongo.ErrNoDocuments {
 		return nil, err
 	}
-	if articleConfig == nil {
-		articleConfig, err = createDefaultArticleConfig(id, ctx)
-		if err != nil {
-			return nil, err
-		}
+
+	articleConfig, err = createDefaultArticleConfig(id, ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	return articleConfig, nil

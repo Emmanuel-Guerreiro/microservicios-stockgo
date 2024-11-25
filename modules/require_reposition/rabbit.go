@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-func EmitNotEnoughStock(articleId string) error {
+func EmitRequireReposition(articleId string, correlationId string) error {
 	ch, err := rabbitEmitter.GetChannel(context.Background())
 	if err != nil {
 		fmt.Println("Error getting channel require_reposition")
@@ -20,7 +20,8 @@ func EmitNotEnoughStock(articleId string) error {
 	}
 
 	send := requireRepositionDto{
-		ArticleId: articleId,
+		ArticleId:     articleId,
+		CorrelationId: correlationId,
 	}
 
 	body, err := json.Marshal(send)
@@ -40,11 +41,12 @@ func EmitNotEnoughStock(articleId string) error {
 		return err
 	}
 
-	fmt.Println("Emited require_reposition")
+	fmt.Println("Emited require_reposition", string(body))
 
 	return nil
 }
 
 type requireRepositionDto struct {
-	ArticleId string `bson:"articleId" json:"articleId" validate:"required,min=1,max=100"`
+	ArticleId     string `bson:"articleId" json:"articleId" validate:"required,min=1,max=100"`
+	CorrelationId string `bson:"correlationId" json:"correlationId" validate:"required,min=1,max=100"`
 }

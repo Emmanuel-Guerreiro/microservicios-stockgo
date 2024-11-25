@@ -15,3 +15,17 @@ type ConsumeOrderPlacedArticleDto struct {
 	ArticleId string `json:"articleId"`
 	Quantity  int    `json:"quantity"`
 }
+
+// {
+// 	"correlation_id": "123123",
+// 	"message": {
+// 		"orderId": "123123",
+// 		"cartId": "123123",
+// 		"articles": [
+// 			{
+// 				"articleId": "123",
+// 				"quantity": 1
+// 			}
+// 		]
+// 	}
+// }

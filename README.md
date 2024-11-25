@@ -10,9 +10,6 @@ Ordenar:
 Casos de uso
 Interfaz
 
-EXPLICAR MEJOR LOS CU
-Aclarar el CU de re-calculo de la proyeccion de stock -> Cu interno, derivado
-
 ## Descripción
 
 Se implementa el microservicio de gestion de stocks basado en las definiciones de la catedra

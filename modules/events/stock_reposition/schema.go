@@ -13,7 +13,8 @@ type consumeStockRepositionMessageDto struct {
 }
 
 type placeStockAvailableMessageDto struct {
-	ArticleId string `json:"articleId" example:"ArticleId"`
+	CorrelationId string `json:"correlation_id" example:"123123" `
+	ArticleId     string `json:"articleId" example:"ArticleId"`
 }
 
 // {

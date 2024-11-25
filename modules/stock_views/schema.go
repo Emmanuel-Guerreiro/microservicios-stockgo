@@ -33,3 +33,7 @@ type StockViewResponseDto struct {
 type stockConsultDto struct {
 	ArticleId string `json:"articleId"`
 }
+
+// {
+// 	"articleId": "123"
+// }
